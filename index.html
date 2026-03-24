@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LP Store</title>
+
+<style>
+body {
+    margin:0;
+    font-family: Arial;
+    background: radial-gradient(circle at top, #1e1b4b, #020617);
+    color:white;
+}
+
+/* HEADER */
+.header {
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.balance {
+    background:#7c3aed;
+    padding:8px 15px;
+    border-radius:20px;
+}
+
+/* SEARCH */
+.search {
+    margin:10px;
+    padding:10px;
+    width:calc(100% - 40px);
+    border-radius:10px;
+    border:none;
+}
+
+/* FILTERS */
+.filters {
+    display:flex;
+    gap:10px;
+    padding:10px;
+}
+
+.filter {
+    padding:8px 15px;
+    border-radius:20px;
+    background:#1e293b;
+    cursor:pointer;
+}
+
+.active {
+    background:#7c3aed;
+}
+
+/* CARD */
+.card {
+    background:#1e293b;
+    margin:15px;
+    padding:15px;
+    border-radius:15px;
+}
+
+.price {
+    font-size:22px;
+}
+
+.btn {
+    margin-top:10px;
+    background:#2563eb;
+    padding:10px;
+    border-radius:10px;
+    text-align:center;
+    cursor:pointer;
+}
+
+/* BOTTOM NAV */
+.bottom {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:#020617;
+    display:flex;
+    justify-content:space-around;
+    padding:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <h2>💎 LP STORE</h2>
+    <div class="balance" id="balance">0€</div>
+</div>
+
+<input class="search" placeholder="🔎 Rechercher..." onkeyup="searchItem(this.value)">
+
+<div class="filters">
+    <div class="filter active" onclick="setFilter('all')">ALL</div>
+    <div class="filter" onclick="setFilter('cc')">CC</div>
+    <div class="filter" onclick="setFilter('log')">LOG</div>
+</div>
+
+<div style="padding:10px;">
+    🛒 Panier: <span id="cart">0€</span>
+</div>
+
+<div id="products"></div>
+
+<div class="bottom">
+    <span>🏠</span>
+    <span>🛒</span>
+    <span>💰</span>
+    <span onclick="buy()">💳</span>
+</div>
+
+<script>
+
+let userId = Math.floor(Math.random()*1000);
+let products = [];
+let cart = [];
+let currentFilter = "all";
+
+async function load(){
+
+  let res = await fetch("/products");
+  products = await res.json();
+
+  let user = await fetch("/user", {
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id:userId})
+  });
+
+  user = await user.json();
+
+  document.getElementById("balance").innerText = user.balance + "€";
+
+  render();
+}
+
+function render(){
+  let html = "";
+
+  products.forEach(p=>{
+
+    if(currentFilter !== "all" && p.type !== currentFilter) return;
+
+    html += `
+    <div class="card">
+        <h3>${p.name}</h3>
+        <div class="price">${p.price} €</div>
+        <div class="btn" onclick="add(${p.id})">🛒 Ajouter</div>
+    </div>
+    `;
+  });
+
+  document.getElementById("products").innerHTML = html;
+}
+
+function setFilter(type){
+  currentFilter = type;
+  render();
+}
+
+function searchItem(value){
+  let cards = document.querySelectorAll(".card");
+  cards.forEach(card=>{
+    card.style.display = card.innerText.toLowerCase().includes(value.toLowerCase()) ? "block" : "none";
+  });
+}
+
+function updateCart(){
+  let total = cart.reduce((a,b)=>a+b.price,0);
+  document.getElementById("cart").innerText = total + "€";
+}
+
+async function add(id){
+  let product = products.find(p=>p.id==id);
+
+  cart.push(product);
+  updateCart();
+
+  await fetch("/add",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id:userId, product})
+  });
+}
+
+async function buy(){
+  let res = await fetch("/buy",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id:userId})
+  });
+
+  let data = await res.json();
+
+  if(data.success){
+    alert("✅ Achat réussi");
+    cart = [];
+    updateCart();
+    location.reload();
+  } else {
+    alert("❌ Pas assez d'argent");
+  }
+}
+
+load();
+
+</script>
+
+</body>
+</html>
