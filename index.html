@@ -1,84 +1,92 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>LP STORE</title>
+<meta charset="UTF-8">
+<title>LP STORE</title>
 
-  <style>
-    body {
-      background: #0f172a;
-      color: white;
-      font-family: Arial;
-      padding: 20px;
-    }
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+}
 
-    h1 {
-      text-align: center;
-    }
+h1 {
+    margin-top: 20px;
+}
 
-    .product {
-      background: #1e293b;
-      padding: 20px;
-      margin: 20px 0;
-      border-radius: 10px;
-    }
+.produit {
+    background: #1e293b;
+    margin: 20px auto;
+    padding: 20px;
+    width: 250px;
+    border-radius: 10px;
+}
 
-    button {
-      background: #3b82f6;
-      border: none;
-      padding: 10px 20px;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+}
 
-    .pay {
-      width: 100%;
-      background: green;
-      margin-top: 20px;
-    }
-  </style>
+button:hover {
+    background: #2563eb;
+}
+
+.payer {
+    background: #22c55e;
+    margin-top: 20px;
+}
+</style>
+
 </head>
 
 <body>
 
-  <h1>💎 LP STORE</h1>
+<h1>💎 LP STORE</h1>
 
-  <div class="product">
+<div class="produit">
     <h2>Produit A</h2>
-    <p>50€</p>
-    <button onclick="ajouter('Produit A - 50€')">Ajouter</button>
-  </div>
+    <p>50 €</p>
+    <button onclick="ajouter('Produit A', 50)">Ajouter</button>
+</div>
 
-  <div class="product">
+<div class="produit">
     <h2>Produit B</h2>
-    <p>70€</p>
-    <button onclick="ajouter('Produit B - 70€')">Ajouter</button>
-  </div>
+    <p>70 €</p>
+    <button onclick="ajouter('Produit B', 70)">Ajouter</button>
+</div>
 
-  <h2 id="panier">Panier : 0€</h2>
+<button class="payer" onclick="payer()">💰 Payer</button>
 
-  <button class="pay" onclick="payer()">💸 Payer</button>
+<script>
+let panier = [];
 
-  <script>
-    let total = 0;
+function ajouter(nom, prix) {
+    panier.push({ nom, prix });
+    alert(nom + " ajouté !");
+}
 
-    function ajouter(produit) {
-      if (produit.includes("50")) total += 50;
-      if (produit.includes("70")) total += 70;
-
-      document.getElementById("panier").innerText = "Panier : " + total + "€";
+async function payer() {
+    if (panier.length === 0) {
+        alert("Panier vide !");
+        return;
     }
 
-    function payer() {
-      fetch('/payer')
-        .then(() => {
-          alert("Commande envoyée !");
-          total = 0;
-          document.getElementById("panier").innerText = "Panier : 0€";
-        });
-    }
-  </script>
+    await fetch('/payer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ panier })
+    });
+
+    alert("Commande envoyée sur Telegram 🔥");
+    panier = [];
+}
+</script>
 
 </body>
 </html>

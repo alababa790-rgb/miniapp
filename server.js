@@ -1,33 +1,38 @@
-const express = require("express");
-const path = require("path");
-const TelegramBot = require("node-telegram-bot-api");
-
+const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// 🔑 TON TOKEN
-const bot = new TelegramBot("8778778149:AAG4I-kGa2YTuW6ymqPseQd4bzSYIgv5uC0", { polling: true });
+app.use(express.json());
+app.use(express.static(__dirname));
 
-// 👉 TON CHAT ID (on va le récupérer après)
-let CHAT_ID = null;
-
-// récupérer ton chat id automatiquement
-bot.on("message", (msg) => {
-  CHAT_ID = msg.chat.id;
-  console.log("Chat ID:", CHAT_ID);
-});
-
-// servir ton site
-app.use(express.static(path.join(__dirname)));
+const TOKEN = "8778778149:AAG4I-kGa2YTuW6ymqPseQd4bzSYIgv5uC0";
+const CHAT_ID = "8522024483";
 
 // route paiement
-app.get("/payer", (req, res) => {
-  if (CHAT_ID) {
-    bot.sendMessage(CHAT_ID, "💸 Nouvelle commande reçue !");
-  }
-  res.send("Commande envoyée !");
+app.post('/payer', async (req, res) => {
+    const panier = req.body.panier;
+
+    let message = "🛒 Nouvelle commande:\n\n";
+
+    panier.forEach(p => {
+        message += - ${p.nom} : ${p.prix}€\n;
+    });
+
+    const total = panier.reduce((acc, p) => acc + p.prix, 0);
+    message += \n💰 Total : ${total}€;
+
+    // envoi Telegram
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: message
+        })
+    });
+
+    res.json({ success: true });
 });
 
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+app.listen(3000, () => {
+    console.log("🚀 Server running on port 3000");
 });
