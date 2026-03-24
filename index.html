@@ -2,199 +2,112 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>LP STORE</title>
+<title>EKIP667 STORE</title>
 
 <style>
 body {
-    font-family: Arial;
-    background: #0f172a;
-    color: white;
     margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
 }
 
-/* HEADER */
-header {
-    background: #020617;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
+/* LOGO /
 .logo {
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.panier-btn {
-    background: #9333ea;
-    padding: 8px 15px;
-    border-radius: 20px;
-    cursor: pointer;
-}
-
-/* PRODUITS */
-.container {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    margin-top: 40px;
-    flex-wrap: wrap;
-}
-
-.card {
-    background: #1e293b;
-    padding: 20px;
-    border-radius: 15px;
-    width: 250px;
     text-align: center;
-    transition: 0.3s;
+    font-size: 28px;
+    font-weight: bold;
+    padding: 20px;
+    background: linear-gradient(90deg, #9333ea, #3b82f6);
+    -webkit-background-clip: text;
+    color: transparent;
 }
 
-.card:hover {
+/ PRODUITS /
+.container {
+    padding: 20px;
+}
+
+.produit {
+    background: #1e293b;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    transition: 0.3s;
+    animation: fadeIn 0.6s ease forwards;
+}
+
+.produit:hover {
     transform: scale(1.05);
 }
 
-.card img {
-    width: 100%;
-    border-radius: 10px;
-}
-
-/* BUTTON */
+/ BOUTONS /
 button {
-    margin-top: 10px;
-    padding: 10px;
+    background: linear-gradient(90deg, #3b82f6, #9333ea);
     border: none;
+    padding: 12px;
     border-radius: 10px;
-    background: #3b82f6;
     color: white;
+    font-weight: bold;
     cursor: pointer;
+    width: 100%;
+    transition: 0.3s;
 }
 
 button:hover {
-    background: #2563eb;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #9333ea;
 }
 
-/* PANIER PANEL */
+/ PANIER /
 .panier {
     position: fixed;
-    right: -300px;
-    top: 0;
-    width: 300px;
-    height: 100%;
-    background: #020617;
-    padding: 20px;
-    transition: 0.3s;
-    overflow-y: auto;
-}
-
-.panier.open {
-    right: 0;
-}
-
-.item {
-    background: #1e293b;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.total {
-    margin-top: 20px;
+    bottom: 20px;
+    right: 20px;
+    background: #9333ea;
+    padding: 15px 20px;
+    border-radius: 50px;
     font-weight: bold;
 }
 
-.payer {
-    margin-top: 20px;
-    background: #22c55e;
-    width: 100%;
+/ ANIMATION */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
 }
 </style>
+
 </head>
 
 <body>
 
-<header>
-    <div class="logo">💎 LP STORE</div>
-    <div class="panier-btn" onclick="togglePanier()">🛒 <span id="count">0</span></div>
-</header>
+<h1 class="logo">💎 EKIP667 STORE</h1>
 
 <div class="container">
 
-    <div class="card">
-        <img src="https://via.placeholder.com/250">
-        <h3>Produit A</h3>
-        <p>50 €</p>
-        <button onclick="ajouter('Produit A', 50)">Ajouter</button>
+    <div class="produit">
+        <h2>🔥 Produit A</h2>
+        <p>50€</p>
+        <button onclick="ajouterAuPanier(50)">Ajouter au panier</button>
     </div>
 
-    <div class="card">
-        <img src="https://via.placeholder.com/250">
-        <h3>Produit B</h3>
-        <p>70 €</p>
-        <button onclick="ajouter('Produit B', 70)">Ajouter</button>
+    <div class="produit">
+        <h2>🔥 Produit B</h2>
+        <p>70€</p>
+        <button onclick="ajouterAuPanier(70)">Ajouter au panier</button>
     </div>
 
 </div>
 
-<!-- PANIER -->
-<div class="panier" id="panier">
-    <h2>🛒 Panier</h2>
-    <div id="items"></div>
-    <div class="total">Total: <span id="total">0</span> €</div>
-    <button class="payer" onclick="payer()">💰 Payer</button>
-</div>
+<div class="panier" id="panier">Panier : 0€</div>
 
 <script>
-let panier = [];
+let total = 0;
 
-function togglePanier() {
-    document.getElementById("panier").classList.toggle("open");
-}
-
-function ajouter(nom, prix) {
-    panier.push({ nom, prix });
-    updatePanier();
-}
-
-function supprimer(index) {
-    panier.splice(index, 1);
-    updatePanier();
-}
-
-function updatePanier() {
-    document.getElementById("count").innerText = panier.length;
-
-    let itemsDiv = document.getElementById("items");
-    itemsDiv.innerHTML = "";
-
-    let total = 0;
-
-    panier.forEach((p, i) => {
-        total += p.prix;
-
-        itemsDiv.innerHTML += `
-            <div class="item">
-                ${p.nom} - ${p.prix}€
-                <button onclick="supprimer(${i})">❌</button>
-            </div>
-        `;
-    });
-
-    document.getElementById("total").innerText = total;
-}
-
-function payer() {
-    if (panier.length === 0) {
-        alert("Panier vide !");
-        return;
-    }
-
-    alert("Commande validée 💰🔥");
-    panier = [];
-    updatePanier();
+function ajouterAuPanier(prix) {
+    total += prix;
+    document.getElementById("panier").innerText = "Panier : " + total + "€";
 }
 </script>
 
