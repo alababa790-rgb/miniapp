@@ -9,25 +9,63 @@ body {
     font-family: Arial;
     background: #0f172a;
     color: white;
-    text-align: center;
+    margin: 0;
 }
 
-h1 {
-    margin-top: 20px;
+/* HEADER */
+header {
+    background: #020617;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.produit {
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.panier-btn {
+    background: #9333ea;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+/* PRODUITS */
+.container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.card {
     background: #1e293b;
-    margin: 20px auto;
     padding: 20px;
+    border-radius: 15px;
     width: 250px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card img {
+    width: 100%;
     border-radius: 10px;
 }
 
+/* BUTTON */
 button {
-    padding: 10px 20px;
+    margin-top: 10px;
+    padding: 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     background: #3b82f6;
     color: white;
     cursor: pointer;
@@ -37,54 +75,126 @@ button:hover {
     background: #2563eb;
 }
 
-.payer {
-    background: #22c55e;
+/* PANIER PANEL */
+.panier {
+    position: fixed;
+    right: -300px;
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background: #020617;
+    padding: 20px;
+    transition: 0.3s;
+    overflow-y: auto;
+}
+
+.panier.open {
+    right: 0;
+}
+
+.item {
+    background: #1e293b;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.total {
     margin-top: 20px;
+    font-weight: bold;
+}
+
+.payer {
+    margin-top: 20px;
+    background: #22c55e;
+    width: 100%;
 }
 </style>
-
 </head>
 
 <body>
 
-<h1>💎 LP STORE</h1>
+<header>
+    <div class="logo">💎 LP STORE</div>
+    <div class="panier-btn" onclick="togglePanier()">🛒 <span id="count">0</span></div>
+</header>
 
-<div class="produit">
-    <h2>Produit A</h2>
-    <p>50 €</p>
-    <button onclick="ajouter('Produit A', 50)">Ajouter</button>
+<div class="container">
+
+    <div class="card">
+        <img src="https://via.placeholder.com/250">
+        <h3>Produit A</h3>
+        <p>50 €</p>
+        <button onclick="ajouter('Produit A', 50)">Ajouter</button>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/250">
+        <h3>Produit B</h3>
+        <p>70 €</p>
+        <button onclick="ajouter('Produit B', 70)">Ajouter</button>
+    </div>
+
 </div>
 
-<div class="produit">
-    <h2>Produit B</h2>
-    <p>70 €</p>
-    <button onclick="ajouter('Produit B', 70)">Ajouter</button>
+<!-- PANIER -->
+<div class="panier" id="panier">
+    <h2>🛒 Panier</h2>
+    <div id="items"></div>
+    <div class="total">Total: <span id="total">0</span> €</div>
+    <button class="payer" onclick="payer()">💰 Payer</button>
 </div>
-
-<button class="payer" onclick="payer()">💰 Payer</button>
 
 <script>
 let panier = [];
 
-function ajouter(nom, prix) {
-    panier.push({ nom, prix });
-    alert(nom + " ajouté !");
+function togglePanier() {
+    document.getElementById("panier").classList.toggle("open");
 }
 
-async function payer() {
+function ajouter(nom, prix) {
+    panier.push({ nom, prix });
+    updatePanier();
+}
+
+function supprimer(index) {
+    panier.splice(index, 1);
+    updatePanier();
+}
+
+function updatePanier() {
+    document.getElementById("count").innerText = panier.length;
+
+    let itemsDiv = document.getElementById("items");
+    itemsDiv.innerHTML = "";
+
+    let total = 0;
+
+    panier.forEach((p, i) => {
+        total += p.prix;
+
+        itemsDiv.innerHTML += `
+            <div class="item">
+                ${p.nom} - ${p.prix}€
+                <button onclick="supprimer(${i})">❌</button>
+            </div>
+        `;
+    });
+
+    document.getElementById("total").innerText = total;
+}
+
+function payer() {
     if (panier.length === 0) {
         alert("Panier vide !");
         return;
     }
 
-    await fetch('/payer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ panier })
-    });
-
-    alert("Commande envoyée sur Telegram 🔥");
+    alert("Commande validée 💰🔥");
     panier = [];
+    updatePanier();
 }
 </script>
 
