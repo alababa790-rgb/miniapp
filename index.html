@@ -1,217 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>LP Store</title>
+  <meta charset="UTF-8">
+  <title>LP STORE</title>
 
-<style>
-body {
-    margin:0;
-    font-family: Arial;
-    background: radial-gradient(circle at top, #1e1b4b, #020617);
-    color:white;
-}
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial;
+      padding: 20px;
+    }
 
-/* HEADER */
-.header {
-    padding:15px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
+    h1 {
+      text-align: center;
+    }
 
-.balance {
-    background:#7c3aed;
-    padding:8px 15px;
-    border-radius:20px;
-}
+    .product {
+      background: #1e293b;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+    }
 
-/* SEARCH */
-.search {
-    margin:10px;
-    padding:10px;
-    width:calc(100% - 40px);
-    border-radius:10px;
-    border:none;
-}
+    button {
+      background: #3b82f6;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-/* FILTERS */
-.filters {
-    display:flex;
-    gap:10px;
-    padding:10px;
-}
-
-.filter {
-    padding:8px 15px;
-    border-radius:20px;
-    background:#1e293b;
-    cursor:pointer;
-}
-
-.active {
-    background:#7c3aed;
-}
-
-/* CARD */
-.card {
-    background:#1e293b;
-    margin:15px;
-    padding:15px;
-    border-radius:15px;
-}
-
-.price {
-    font-size:22px;
-}
-
-.btn {
-    margin-top:10px;
-    background:#2563eb;
-    padding:10px;
-    border-radius:10px;
-    text-align:center;
-    cursor:pointer;
-}
-
-/* BOTTOM NAV */
-.bottom {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    background:#020617;
-    display:flex;
-    justify-content:space-around;
-    padding:10px;
-}
-</style>
-
+    .pay {
+      width: 100%;
+      background: green;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="header">
-    <h2>💎 LP STORE</h2>
-    <div class="balance" id="balance">0€</div>
-</div>
+  <h1>💎 LP STORE</h1>
 
-<input class="search" placeholder="🔎 Rechercher..." onkeyup="searchItem(this.value)">
+  <div class="product">
+    <h2>Produit A</h2>
+    <p>50€</p>
+    <button onclick="ajouter('Produit A - 50€')">Ajouter</button>
+  </div>
 
-<div class="filters">
-    <div class="filter active" onclick="setFilter('all')">ALL</div>
-    <div class="filter" onclick="setFilter('cc')">CC</div>
-    <div class="filter" onclick="setFilter('log')">LOG</div>
-</div>
+  <div class="product">
+    <h2>Produit B</h2>
+    <p>70€</p>
+    <button onclick="ajouter('Produit B - 70€')">Ajouter</button>
+  </div>
 
-<div style="padding:10px;">
-    🛒 Panier: <span id="cart">0€</span>
-</div>
+  <h2 id="panier">Panier : 0€</h2>
 
-<div id="products"></div>
+  <button class="pay" onclick="payer()">💸 Payer</button>
 
-<div class="bottom">
-    <span>🏠</span>
-    <span>🛒</span>
-    <span>💰</span>
-    <span onclick="buy()">💳</span>
-</div>
+  <script>
+    let total = 0;
 
-<script>
+    function ajouter(produit) {
+      if (produit.includes("50")) total += 50;
+      if (produit.includes("70")) total += 70;
 
-let userId = Math.floor(Math.random()*1000);
-let products = [];
-let cart = [];
-let currentFilter = "all";
+      document.getElementById("panier").innerText = "Panier : " + total + "€";
+    }
 
-async function load(){
-
-  let res = await fetch("/products");
-  products = await res.json();
-
-  let user = await fetch("/user", {
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({id:userId})
-  });
-
-  user = await user.json();
-
-  document.getElementById("balance").innerText = user.balance + "€";
-
-  render();
-}
-
-function render(){
-  let html = "";
-
-  products.forEach(p=>{
-
-    if(currentFilter !== "all" && p.type !== currentFilter) return;
-
-    html += `
-    <div class="card">
-        <h3>${p.name}</h3>
-        <div class="price">${p.price} €</div>
-        <div class="btn" onclick="add(${p.id})">🛒 Ajouter</div>
-    </div>
-    `;
-  });
-
-  document.getElementById("products").innerHTML = html;
-}
-
-function setFilter(type){
-  currentFilter = type;
-  render();
-}
-
-function searchItem(value){
-  let cards = document.querySelectorAll(".card");
-  cards.forEach(card=>{
-    card.style.display = card.innerText.toLowerCase().includes(value.toLowerCase()) ? "block" : "none";
-  });
-}
-
-function updateCart(){
-  let total = cart.reduce((a,b)=>a+b.price,0);
-  document.getElementById("cart").innerText = total + "€";
-}
-
-async function add(id){
-  let product = products.find(p=>p.id==id);
-
-  cart.push(product);
-  updateCart();
-
-  await fetch("/add",{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({id:userId, product})
-  });
-}
-
-async function buy(){
-  let res = await fetch("/buy",{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({id:userId})
-  });
-
-  let data = await res.json();
-
-  if(data.success){
-    alert("✅ Achat réussi");
-    cart = [];
-    updateCart();
-    location.reload();
-  } else {
-    alert("❌ Pas assez d'argent");
-  }
-}
-
-load();
-
-</script>
+    function payer() {
+      fetch('/payer')
+        .then(() => {
+          alert("Commande envoyée !");
+          total = 0;
+          document.getElementById("panier").innerText = "Panier : 0€";
+        });
+    }
+  </script>
 
 </body>
 </html>
